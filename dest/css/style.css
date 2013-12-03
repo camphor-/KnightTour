@@ -1,0 +1,120 @@
+body {
+  background-image: url("../images/background2.png");
+  padding: 0;
+  margin: 0;
+  text-align: center;
+}
+body #game {
+  position: relative;
+  width: 480px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 15px;
+  text-align: center;
+}
+body #game #header #countimage {
+  width: 30px;
+  height: 30px;
+  background-image: url("../images/queen.png");
+  background-size: contain;
+  float: left;
+}
+body #game #header #countlabel {
+  font-size: x-large;
+  float: left;
+}
+body #game #header #timelabel {
+  font-size: x-large;
+  float: right;
+}
+body #game .overlay {
+  position: absolute;
+  width: 482px;
+  height: 100%;
+  z-index: 2;
+}
+body #game #intro .title {
+  width: 354px;
+  height: 112px;
+  margin: 0 auto;
+  background-image: url("../images/title.png");
+}
+body #game #message {
+  background-color: rgba(0,0,0,0.75);
+  color: #fff;
+  width: 70%;
+  height: 50%;
+  margin: 0 15%;
+  top: 25%;
+}
+body #game #message .messagelabel {
+  font-size: x-large;
+  margin-top: 50px;
+}
+body #game #message #backbutton {
+  position: absolute;
+  left: 40%;
+  bottom: 30px;
+}
+body #game #field {
+  width: 480px;
+  height: 480px;
+  background-image: url("../images/field.png");
+  background-size: contain;
+  padding: 1px;
+  margin-bottom: 5px;
+}
+body #game #field .row {
+  width: 480px;
+  height: 60px;
+}
+body #game #field .row .block {
+  position: relative;
+  margin: 1px;
+  width: 58px;
+  height: 58px;
+  float: left;
+}
+body #game #field .row .block .guide {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: url("../images/mark.png");
+  background-size: contain;
+  z-index: 1;
+}
+body #game #field .row .block.active {
+  background-image: url("../images/queen.png");
+  background-size: contain;
+}
+body #game #field .row .block.active.mark {
+  background-image: url("../images/queen_marked.png");
+  background-size: contain;
+}
+body #game #buttonarea {
+  text-align: center;
+}
+body #game #buttonarea .button {
+  width: 156px;
+  font-size: 0.75rem;
+}
+body #game #buttonarea .button.purple {
+  background-color: #685f93 !important;
+}
+body #game #buttonarea .button.purple:hover {
+  background-color: #403971 !important;
+}
+body #game #buttonarea .button.purple.disabled {
+  background-color: #9b94b8 !important;
+}
+.clear {
+  clear: both;
+}
+@media screen and (-ms-view-state: fullscreen-landscape) {
+}
+@media screen and (-ms-view-state: filled) {
+}
+@media screen and (-ms-view-state: snapped) {
+}
+@media screen and (-ms-view-state: fullscreen-portrait) {
+}
