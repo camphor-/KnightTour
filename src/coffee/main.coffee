@@ -7,15 +7,17 @@ Main = {
   time: 0
   timer: null
   result: false
+  dx: [-1, -2, -2, -1, 1, 2, 2, 1]
+  dy: [-2, -1, 1, 2, 2, 1, -1, -2]
 }
 
 $ ->
   replaceScene('intro')
   #ブロック要素を二次元配列に格納
-  blocks = $('.block')
+  blocks_in_dom = $('.block')
   for i in [0...8]
     for j in [0...8]
-      block = blocks[i*8+j]
+      block = blocks_in_dom[i*8+j]
       block.x = i
       block.y = j
       block.status = 0
@@ -28,10 +30,8 @@ $ ->
     Main.time = 0
     startTimer()
     updateTimeLabel()
-  $('#judgebutton').click ->
-    if !$('#judgebutton').hasClass('disabled')
-      showResult()
-
+  $('#onestepbackbutton').click ->
+    backOneStep()
   $('#resetbutton').click ->
     reset()
 
@@ -53,43 +53,25 @@ replaceScene = (id) ->
   $('#'+id).show()
 
 toggle = (block) ->
-  if block.status
-    $(block).removeClass('active')
-    block.status = 0
-    Main.count--
-    removeElem(Main.queens, [block.x, block.y])
-  else if Main.count<8
+  if can_be_put(block)
     $(block).addClass('active')
     block.status = 1
     Main.count++
-    Main.queens.push([block.x, block.y])
+    queen = {x:block.x, y:block.y}
+    Main.queens.push(queen)
   if Main.guideEnabled
     refreshGuide()
   updateCountLabel()
-  updateJudgeButtonState()
-
-updateJudgeButtonState = ->
-  if Main.count==8
-    $('#judgebutton').removeClass('disabled')
-  else
-    $('#judgebutton').addClass('disabled', 'disabled')
+  if judge()
+    showResult()
 
 judge = ->
-  queens = Main.queens
-  #縦横
-  for q, i in queens
-    for j in [i+1...queens.length]
-      if q[0]==queens[j][0] or q[1]==queens[j][1]
-        return false
-  #斜め
-  for q, i in queens
-    for j in [i+1...queens.length]
-      if (queens[j][1] == -queens[j][0] + q[1]+q[0]) or (queens[j][1] == queens[j][0] + q[1]-q[0])
-        return false
-  return true
+  if Main.count == 64
+    return true
+  return false
 
 updateCountLabel = ->
-  $('#countlabel').html('×' + Main.count + '/8')
+  $('#countlabel').html('×' + Main.count + '/64')
 
 updateTimeLabel = ->
   $('#timelabel').html(Main.time + '秒')
@@ -114,7 +96,6 @@ reset = ->
   for g, i in Main.guides
     g.remove()
   Main.guides = []
-  updateJudgeButtonState()
   console.log Main.queens
 
 showMessage = (mes) ->
@@ -122,14 +103,20 @@ showMessage = (mes) ->
   $('#message').show()
 
 showResult = ->
-  if !$(this).hasClass('disabled')
-    if judge()
-      clearInterval(Main.timer)
-      showMessage("正解！<br>✌(’ω’✌ )三✌(’ω’)✌三( ✌’ω’)✌<br><br>タイム: "+(Main.time-1)+"秒")
-      Main.result = true
-    else
-      showMessage("不正解<br>('ω'乂)")
-      Main.result = false
+  clearInterval(Main.timer)
+  showMessage("正解！<br>✌(’ω’✌ )三✌(’ω’)✌三( ✌’ω’)✌<br><br>タイム: "+(Main.time-1)+"秒")
+  Main.result = true
+
+backOneStep = ->
+  last_queen = Main.queens.pop()
+  console.log last_queen
+  block = Main.blocks[last_queen.x][last_queen.y]
+  $(block).removeClass('active')
+  block.status = 0
+  Main.count--
+  updateCountLabel()
+  if Main.guideEnabled
+    refreshGuide()
 
 switchGuide = ->
   if Main.guideEnabled
@@ -143,44 +130,47 @@ switchGuide = ->
 
   Main.guideEnabled = !Main.guideEnabled
 
+can_be_put = (block) ->
+  if Main.queens.length == 0
+    return true
+
+  last_queen = Main.queens[Main.queens.length-1]
+  for cell in next_cells(last_queen)
+    if cell.x == block.x && cell.y == block.y
+      return true
+  return false
+
+next_cells = (cell) ->
+  console.log "calls next_cells"
+  cells = []
+  for i in [0...8]
+    nx = cell.x + Main.dx[i]
+    ny = cell.y + Main.dy[i]
+    console.log "i:" + i + " now:" + cell.x + "," + cell.y
+    if nx < 0 || 8 <= nx || ny < 0 || 8 <= ny
+      continue
+    if Main.blocks[nx][ny].status == 1
+      continue
+    new_cell = {x:nx, y:ny}
+    console.log "Add" + nx + "," + ny
+    cells.push new_cell
+  return cells
+
+
 refreshGuide = ->
   clearGuide()
-  queens = Main.queens
-  for q, i in queens
-    for x in [0...8]
-      #縦横
-      if x!=q[1]
-        guide = $('<div>').addClass('guide')
-        guide.x = q[0]
-        guide.y = x
-        $(Main.blocks[q[0]][x]).append(guide)
-        $(Main.blocks[q[0]][x]).addClass('mark')
-        Main.guides.push(guide)
-      if x!=q[0]
-        guide = $('<div>').addClass('guide')
-        guide.x = x
-        guide.y = q[1]
-        $(Main.blocks[x][q[1]]).append(guide)
-        $(Main.blocks[x][q[1]]).addClass('mark')
-        Main.guides.push(guide)
-      #斜め
-      if x!=q[0]
-        y = -x + q[1]+q[0]
-        if 0<=y<8
-          guide = $('<div>').addClass('guide')
-          guide.x = x
-          guide.y = y
-          $(Main.blocks[x][y]).append(guide)
-          $(Main.blocks[x][y]).addClass('mark')
-          Main.guides.push(guide)
-        y = x + q[1]-q[0]
-        if 0<=y<8
-          guide = $('<div>').addClass('guide')
-          guide.x = x
-          guide.y = y
-          $(Main.blocks[x][y]).append(guide)
-          $(Main.blocks[x][y]).addClass('mark')
-          Main.guides.push(guide)
+  console.log Main.queens.length
+  last_queen = Main.queens[Main.queens.length-1]
+  console.log last_queen
+  for cell in next_cells(last_queen)
+    nx = cell.x
+    ny = cell.y
+    guide = $('<div>').addClass('guide')
+    guide.x = nx
+    guide.y = ny
+    $(Main.blocks[nx][ny]).append(guide)
+    $(Main.blocks[nx][ny]).addClass('mark')
+    Main.guides.push(guide)
 
 clearGuide = ->
   for g, i in Main.guides
@@ -206,7 +196,6 @@ arraysEqual = (arrayA, arrayB) ->
   for v, i in arrayA
     a = arrayA[i]
     b = arrayB[i]
-    console.log a+','+b
     if (a instanceof Array) and (b instanceof Array)
       if !arraysEqual(a, b)
         return false

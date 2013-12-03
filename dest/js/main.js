@@ -1,4 +1,4 @@
-var Main, arraysEqual, clearGuide, judge, refreshGuide, removeElem, replaceScene, reset, showMessage, showResult, startTimer, switchGuide, toggle, updateCountLabel, updateJudgeButtonState, updateTimeLabel;
+var Main, arraysEqual, backOneStep, can_be_put, clearGuide, judge, next_cells, refreshGuide, removeElem, replaceScene, reset, showMessage, showResult, startTimer, switchGuide, toggle, updateCountLabel, updateTimeLabel;
 
 Main = {
   blocks: [[], [], [], [], [], [], [], []],
@@ -8,16 +8,18 @@ Main = {
   count: 0,
   time: 0,
   timer: null,
-  result: false
+  result: false,
+  dx: [-1, -2, -2, -1, 1, 2, 2, 1],
+  dy: [-2, -1, 1, 2, 2, 1, -1, -2]
 };
 
 $(function() {
-  var block, blocks, i, j, _i, _j;
+  var block, blocks_in_dom, i, j, _i, _j;
   replaceScene('intro');
-  blocks = $('.block');
+  blocks_in_dom = $('.block');
   for (i = _i = 0; _i < 8; i = ++_i) {
     for (j = _j = 0; _j < 8; j = ++_j) {
-      block = blocks[i * 8 + j];
+      block = blocks_in_dom[i * 8 + j];
       block.x = i;
       block.y = j;
       block.status = 0;
@@ -34,10 +36,8 @@ $(function() {
     startTimer();
     return updateTimeLabel();
   });
-  $('#judgebutton').click(function() {
-    if (!$('#judgebutton').hasClass('disabled')) {
-      return showResult();
-    }
+  $('#onestepbackbutton').click(function() {
+    return backOneStep();
   });
   $('#resetbutton').click(function() {
     return reset();
@@ -67,56 +67,35 @@ replaceScene = function(id) {
 };
 
 toggle = function(block) {
-  if (block.status) {
-    $(block).removeClass('active');
-    block.status = 0;
-    Main.count--;
-    removeElem(Main.queens, [block.x, block.y]);
-  } else if (Main.count < 8) {
+  var queen;
+  if (can_be_put(block)) {
     $(block).addClass('active');
     block.status = 1;
     Main.count++;
-    Main.queens.push([block.x, block.y]);
+    queen = {
+      x: block.x,
+      y: block.y
+    };
+    Main.queens.push(queen);
   }
   if (Main.guideEnabled) {
     refreshGuide();
   }
   updateCountLabel();
-  return updateJudgeButtonState();
-};
-
-updateJudgeButtonState = function() {
-  if (Main.count === 8) {
-    return $('#judgebutton').removeClass('disabled');
-  } else {
-    return $('#judgebutton').addClass('disabled', 'disabled');
+  if (judge()) {
+    return showResult();
   }
 };
 
 judge = function() {
-  var i, j, q, queens, _i, _j, _k, _l, _len, _len1, _ref, _ref1, _ref2, _ref3;
-  queens = Main.queens;
-  for (i = _i = 0, _len = queens.length; _i < _len; i = ++_i) {
-    q = queens[i];
-    for (j = _j = _ref = i + 1, _ref1 = queens.length; _ref <= _ref1 ? _j < _ref1 : _j > _ref1; j = _ref <= _ref1 ? ++_j : --_j) {
-      if (q[0] === queens[j][0] || q[1] === queens[j][1]) {
-        return false;
-      }
-    }
+  if (Main.count === 64) {
+    return true;
   }
-  for (i = _k = 0, _len1 = queens.length; _k < _len1; i = ++_k) {
-    q = queens[i];
-    for (j = _l = _ref2 = i + 1, _ref3 = queens.length; _ref2 <= _ref3 ? _l < _ref3 : _l > _ref3; j = _ref2 <= _ref3 ? ++_l : --_l) {
-      if ((queens[j][1] === -queens[j][0] + q[1] + q[0]) || (queens[j][1] === queens[j][0] + q[1] - q[0])) {
-        return false;
-      }
-    }
-  }
-  return true;
+  return false;
 };
 
 updateCountLabel = function() {
-  return $('#countlabel').html('×' + Main.count + '/8');
+  return $('#countlabel').html('×' + Main.count + '/64');
 };
 
 updateTimeLabel = function() {
@@ -151,7 +130,6 @@ reset = function() {
     g.remove();
   }
   Main.guides = [];
-  updateJudgeButtonState();
   return console.log(Main.queens);
 };
 
@@ -161,15 +139,22 @@ showMessage = function(mes) {
 };
 
 showResult = function() {
-  if (!$(this).hasClass('disabled')) {
-    if (judge()) {
-      clearInterval(Main.timer);
-      showMessage("正解！<br>✌(’ω’✌ )三✌(’ω’)✌三( ✌’ω’)✌<br><br>タイム: " + (Main.time - 1) + "秒");
-      return Main.result = true;
-    } else {
-      showMessage("不正解<br>('ω'乂)");
-      return Main.result = false;
-    }
+  clearInterval(Main.timer);
+  showMessage("正解！<br>✌(’ω’✌ )三✌(’ω’)✌三( ✌’ω’)✌<br><br>タイム: " + (Main.time - 1) + "秒");
+  return Main.result = true;
+};
+
+backOneStep = function() {
+  var block, last_queen;
+  last_queen = Main.queens.pop();
+  console.log(last_queen);
+  block = Main.blocks[last_queen.x][last_queen.y];
+  $(block).removeClass('active');
+  block.status = 0;
+  Main.count--;
+  updateCountLabel();
+  if (Main.guideEnabled) {
+    return refreshGuide();
   }
 };
 
@@ -186,60 +171,64 @@ switchGuide = function() {
   return Main.guideEnabled = !Main.guideEnabled;
 };
 
+can_be_put = function(block) {
+  var cell, last_queen, _i, _len, _ref;
+  if (Main.queens.length === 0) {
+    return true;
+  }
+  last_queen = Main.queens[Main.queens.length - 1];
+  _ref = next_cells(last_queen);
+  for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+    cell = _ref[_i];
+    if (cell.x === block.x && cell.y === block.y) {
+      return true;
+    }
+  }
+  return false;
+};
+
+next_cells = function(cell) {
+  var cells, i, new_cell, nx, ny, _i;
+  console.log("calls next_cells");
+  cells = [];
+  for (i = _i = 0; _i < 8; i = ++_i) {
+    nx = cell.x + Main.dx[i];
+    ny = cell.y + Main.dy[i];
+    console.log("i:" + i + " now:" + cell.x + "," + cell.y);
+    if (nx < 0 || 8 <= nx || ny < 0 || 8 <= ny) {
+      continue;
+    }
+    if (Main.blocks[nx][ny].status === 1) {
+      continue;
+    }
+    new_cell = {
+      x: nx,
+      y: ny
+    };
+    console.log("Add" + nx + "," + ny);
+    cells.push(new_cell);
+  }
+  return cells;
+};
+
 refreshGuide = function() {
-  var guide, i, q, queens, x, y, _i, _len, _results;
+  var cell, guide, last_queen, nx, ny, _i, _len, _ref, _results;
   clearGuide();
-  queens = Main.queens;
+  console.log(Main.queens.length);
+  last_queen = Main.queens[Main.queens.length - 1];
+  console.log(last_queen);
+  _ref = next_cells(last_queen);
   _results = [];
-  for (i = _i = 0, _len = queens.length; _i < _len; i = ++_i) {
-    q = queens[i];
-    _results.push((function() {
-      var _j, _results1;
-      _results1 = [];
-      for (x = _j = 0; _j < 8; x = ++_j) {
-        if (x !== q[1]) {
-          guide = $('<div>').addClass('guide');
-          guide.x = q[0];
-          guide.y = x;
-          $(Main.blocks[q[0]][x]).append(guide);
-          $(Main.blocks[q[0]][x]).addClass('mark');
-          Main.guides.push(guide);
-        }
-        if (x !== q[0]) {
-          guide = $('<div>').addClass('guide');
-          guide.x = x;
-          guide.y = q[1];
-          $(Main.blocks[x][q[1]]).append(guide);
-          $(Main.blocks[x][q[1]]).addClass('mark');
-          Main.guides.push(guide);
-        }
-        if (x !== q[0]) {
-          y = -x + q[1] + q[0];
-          if ((0 <= y && y < 8)) {
-            guide = $('<div>').addClass('guide');
-            guide.x = x;
-            guide.y = y;
-            $(Main.blocks[x][y]).append(guide);
-            $(Main.blocks[x][y]).addClass('mark');
-            Main.guides.push(guide);
-          }
-          y = x + q[1] - q[0];
-          if ((0 <= y && y < 8)) {
-            guide = $('<div>').addClass('guide');
-            guide.x = x;
-            guide.y = y;
-            $(Main.blocks[x][y]).append(guide);
-            $(Main.blocks[x][y]).addClass('mark');
-            _results1.push(Main.guides.push(guide));
-          } else {
-            _results1.push(void 0);
-          }
-        } else {
-          _results1.push(void 0);
-        }
-      }
-      return _results1;
-    })());
+  for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+    cell = _ref[_i];
+    nx = cell.x;
+    ny = cell.y;
+    guide = $('<div>').addClass('guide');
+    guide.x = nx;
+    guide.y = ny;
+    $(Main.blocks[nx][ny]).append(guide);
+    $(Main.blocks[nx][ny]).addClass('mark');
+    _results.push(Main.guides.push(guide));
   }
   return _results;
 };
@@ -285,7 +274,6 @@ arraysEqual = function(arrayA, arrayB) {
     v = arrayA[i];
     a = arrayA[i];
     b = arrayB[i];
-    console.log(a + ',' + b);
     if ((a instanceof Array) && (b instanceof Array)) {
       if (!arraysEqual(a, b)) {
         return false;
