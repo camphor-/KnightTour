@@ -2,7 +2,7 @@ KnightTour
 ==========
 
 KightTour is a kind of pazzle game with chess.
-This is a description from Wikipedia, the free encyclopedia
+This is a description from [Kinght's tour](http://en.wikipedia.org/wiki/Knight%27s_tour) entry on Wikipedia, the free encyclopedia
 > A knight's tour is a sequence of moves of a knight on a chessboard
 > such that the knight visits every square exactly once. 
 > If the knight ends on a square that is one knight's move 
