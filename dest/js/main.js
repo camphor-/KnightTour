@@ -1,4 +1,4 @@
-var Main, arraysEqual, backOneStep, can_be_put, clearGuide, judge, next_cells, refreshGuide, removeElem, replaceScene, reset, showMessage, showResult, startTimer, switchGuide, toggle, updateCountLabel, updateTimeLabel;
+var Main, arraysEqual, backOneStep, can_be_put, clearGuide, judge, next_cells, playBGM, playClick, playNyah, playSound, refreshGuide, removeElem, replaceScene, reset, showMessage, showResult, startTimer, switchGuide, toggle, updateCountLabel, updateTimeLabel;
 
 Main = {
   blocks: [[], [], [], [], [], [], [], []],
@@ -10,11 +10,14 @@ Main = {
   timer: null,
   result: false,
   dx: [-1, -2, -2, -1, 1, 2, 2, 1],
-  dy: [-2, -1, 1, 2, 2, 1, -1, -2]
+  dy: [-2, -1, 1, 2, 2, 1, -1, -2],
+  nyahSound: null,
+  clickSound: null
 };
 
 $(function() {
   var block, blocks_in_dom, i, j, _i, _j;
+  playBGM();
   replaceScene('intro');
   blocks_in_dom = $('.block');
   for (i = _i = 0; _i < 8; i = ++_i) {
@@ -31,15 +34,18 @@ $(function() {
   }
   updateCountLabel();
   $('#startbutton').click(function() {
+    playSound('../sound/start.wav');
     replaceScene('main');
     Main.time = 0;
     startTimer();
     return updateTimeLabel();
   });
   $('#onestepbackbutton').click(function() {
+    playClick();
     return backOneStep();
   });
   $('#resetbutton').click(function() {
+    playSound('../sound/reset.wav');
     return reset();
   });
   $('#backbutton').click(function() {
@@ -48,10 +54,12 @@ $(function() {
       Main.guideEnabled = true;
       switchGuide();
       replaceScene('intro');
+      playClick();
     }
     return $('#message').hide();
   });
   return $('#guidebutton').click(function() {
+    playClick();
     return switchGuide();
   });
 });
@@ -77,6 +85,7 @@ toggle = function(block) {
       y: block.y
     };
     Main.queens.push(queen);
+    playNyah();
   }
   if (Main.guideEnabled) {
     refreshGuide();
@@ -139,8 +148,9 @@ showMessage = function(mes) {
 };
 
 showResult = function() {
+  playSound('../sound/correct.wav');
   clearInterval(Main.timer);
-  showMessage("正解！<br>✌(’ω’✌ )三✌(’ω’)✌三( ✌’ω’)✌<br><br>タイム: " + (Main.time - 1) + "秒");
+  showMessage("正解！<br>タイム: " + (Main.time - 1) + "秒");
   return Main.result = true;
 };
 
@@ -242,6 +252,37 @@ clearGuide = function() {
     g.remove();
   }
   return Main.guides = [];
+};
+
+playBGM = function() {
+  var bgm;
+  bgm = new Audio('../sound/bgm.wav');
+  bgm.loop = true;
+  return bgm.play();
+};
+
+playNyah = function() {
+  if (!Main.nyahSound) {
+    Main.nyahSound = new Audio('../sound/cat.wav');
+  } else {
+    Main.nyahSound.currentTime = 0;
+  }
+  return Main.nyahSound.play();
+};
+
+playClick = function() {
+  if (!Main.clickSound) {
+    Main.clickSound = new Audio('../sound/click.wav');
+  } else {
+    Main.clickSound.currentTime = 0;
+  }
+  return Main.clickSound.play();
+};
+
+playSound = function(path) {
+  var sound;
+  sound = new Audio(path);
+  return sound.play();
 };
 
 removeElem = function(array, value) {

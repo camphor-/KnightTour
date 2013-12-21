@@ -9,9 +9,12 @@ Main = {
   result: false
   dx: [-1, -2, -2, -1, 1, 2, 2, 1]
   dy: [-2, -1, 1, 2, 2, 1, -1, -2]
+  nyahSound: null
+  clickSound: null
 }
 
 $ ->
+  playBGM()
   replaceScene('intro')
   #ブロック要素を二次元配列に格納
   blocks_in_dom = $('.block')
@@ -26,13 +29,16 @@ $ ->
       Main.blocks[i].push(block)
   updateCountLabel()
   $('#startbutton').click ->
+    playSound('../sound/start.wav')
     replaceScene('main')
     Main.time = 0
     startTimer()
     updateTimeLabel()
   $('#onestepbackbutton').click ->
+    playClick()
     backOneStep()
   $('#resetbutton').click ->
+    playSound('../sound/reset.wav')
     reset()
 
   $('#backbutton').click ->
@@ -41,9 +47,11 @@ $ ->
       Main.guideEnabled = true
       switchGuide()
       replaceScene('intro')
+      playClick()
     $('#message').hide()
 
   $('#guidebutton').click ->
+    playClick()
     switchGuide()
 
 replaceScene = (id) ->
@@ -59,6 +67,7 @@ toggle = (block) ->
     Main.count++
     queen = {x:block.x, y:block.y}
     Main.queens.push(queen)
+    playNyah()
   if Main.guideEnabled
     refreshGuide()
   updateCountLabel()
@@ -103,8 +112,9 @@ showMessage = (mes) ->
   $('#message').show()
 
 showResult = ->
+  playSound('../sound/correct.wav')
   clearInterval(Main.timer)
-  showMessage("正解！<br>✌(’ω’✌ )三✌(’ω’)✌三( ✌’ω’)✌<br><br>タイム: "+(Main.time-1)+"秒")
+  showMessage("正解！<br>タイム: "+(Main.time-1)+"秒")
   Main.result = true
 
 backOneStep = ->
@@ -177,6 +187,29 @@ clearGuide = ->
         $(Main.blocks[g.x][g.y]).removeClass('mark')
         g.remove()
       Main.guides = []
+
+playBGM = ->
+  bgm = new Audio('../sound/bgm.wav')
+  bgm.loop = true
+  bgm.play()
+
+playNyah = ->
+  if !Main.nyahSound
+    Main.nyahSound = new Audio('../sound/cat.wav')
+  else
+    Main.nyahSound.currentTime = 0
+  Main.nyahSound.play();
+
+playClick = ->
+  if !Main.clickSound
+    Main.clickSound = new Audio('../sound/click.wav')
+  else
+    Main.clickSound.currentTime = 0
+  Main.clickSound.play();
+
+playSound = (path) ->
+  sound = new Audio(path)
+  sound.play()
 
 #Foundation
 removeElem = (array, value) ->
