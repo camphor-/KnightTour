@@ -12,6 +12,10 @@ body #game {
   padding: 15px;
   text-align: center;
 }
+body #game .description {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
 body #game #header #countimage {
   width: 30px;
   height: 30px;
